@@ -73,7 +73,7 @@ private:
     static constexpr bool kfDebug = false;
 
 public:
-    cADS131M04(int8_t chipSelectPin, int8_t clockPin, SPIClass* pSpi, int8_t clockChannel = 1);
+    cADS131M04(int8_t chipSelectPin, int8_t clockOutPin, SPIClass* pSpi, int8_t clockChannel = 1);
 
     // neither copyable nor movable
     cADS131M04(const cADS131M04&) = delete;
@@ -149,6 +149,26 @@ public:
     enum class RES_REG : std::uint8_t
         {
         RESERVED                            = 0x3E,
+        };
+
+    /// \brief  Speed
+    enum class SpeedSettings : std::uint32_t
+        {
+        CLOCK_IN                            = 8192000,
+        SCLOCK                              = 25000000,
+        };
+
+    /// \brief  Command Prefix for Command Word
+    enum class  CommandPrefix : std::uint8_t
+        {
+        WRITE                               = 0x06,
+        READ                                = 0x0A,
+        };
+
+    /// \brief  Registers reserved
+    enum class  CommandResponse : std::uint8_t
+        {
+        WRITE                               = 0x04,
         };
 
     ///
@@ -228,7 +248,7 @@ protected:
     bool writeRegister(uint8_t registerAddr, uint16_t data);
 
 private:
-    int8_t m_chipSelectPin, m_clkoutPin, clockCh;
+    int8_t m_chipSelectPin, m_clockOutPin, m_clockChannel;
     SPIClass* m_pSpi;
     bool m_Initialized;
 
@@ -236,7 +256,7 @@ private:
     /// \brief forms a SPI communication frame.
     ///
     /// \param [in] pOutput is used to save communication data.
-    /// \param [in] command is command to be transfe.
+    /// \param [in] command is command to be transfer.
     ///
     void spiCommFrame(uint32_t *pOutput, uint16_t command = 0x0000);
 
