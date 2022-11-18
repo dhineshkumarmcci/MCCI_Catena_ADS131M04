@@ -73,7 +73,9 @@ private:
     static constexpr bool kfDebug = false;
 
 public:
-    cADS131M04(int8_t chipSelectPin, int8_t clockOutPin, SPIClass* pSpi, int8_t clockChannel = 1);
+    cADS131M04()
+        : m_Initialized(false)
+        {}
 
     // neither copyable nor movable
     cADS131M04(const cADS131M04&) = delete;
@@ -154,30 +156,41 @@ public:
     /// \brief  Speed
     enum class SpeedSettings : std::uint32_t
         {
-        CLOCK_IN                            = 8192000,
-        SCLOCK                              = 25000000,
+        ClockIn                            = 8192000,
+        SerialClock                              = 25000000,
         };
 
     /// \brief  Command Prefix for Command Word
-    enum class  CommandPrefix : std::uint8_t
+    enum class  Command : std::uint16_t
         {
-        WRITE                               = 0x06,
-        READ                                = 0x0A,
+        Null                                = 0x0000,
+        Reset                               = 0x0011,
+        Standby                             = 0x0022,
+        WakeUp                              = 0x0033,
+        Lock                                = 0x0555,
+        Unlock                              = 0x0655,
+        Write                               = 0x6000,
+        Read                                = 0xA000,
         };
 
     /// \brief  Registers reserved
-    enum class  CommandResponse : std::uint8_t
+    enum class  CommandResponse : std::uint16_t
         {
-        WRITE                               = 0x04,
+        Write                               = 0x4000,
         };
 
     ///
     /// \brief Power up the ADS131M04 and start operation.
     ///
+    /// \param [in] pSpi is SPI bus to use for ADS131M04.
+    /// \param [in] chipSelectPin is to set NSS pin.
+    /// \param [in] clockOutPin is to set clock pin.
+    /// \param [in] clockChannel is a LEDC channel used to generate the master clock for the ADC.
+    ///
     /// \return
     ///     \c true for success, \c false for failure.
     ///
-    bool begin();
+    bool begin(SPIClass* pSpi, int8_t chipSelectPin = D5, int8_t clockOutPin = D12, int8_t clockChannel = 1);
 
     ///
     /// \brief reads all channels raw data.
@@ -272,7 +285,7 @@ private:
     ///
     /// \param [in] data is data to be two's complimented.
     ///
-    int32_t twoCompDeco(uint32_t data);
+    int32_t twoComplement(uint32_t data);
     };
 
 } // end namespace McciCatenaAds131m04

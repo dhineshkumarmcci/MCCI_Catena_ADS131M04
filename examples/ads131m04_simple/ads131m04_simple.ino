@@ -15,6 +15,7 @@ Author:
 
 #include <MCCI_Catena_ADS131M04.h>
 
+#include <Catena.h>
 #include <Arduino.h>
 
 /****************************************************************************\
@@ -24,6 +25,7 @@ Author:
 \****************************************************************************/
 
 using namespace McciCatenaAds131m04;
+using namespace McciCatena;
 
 /****************************************************************************\
 |
@@ -31,13 +33,16 @@ using namespace McciCatenaAds131m04;
 |
 \****************************************************************************/
 
+// the primary object
+Catena gCatena;
+
 SPIClass gSPI2(
     Catena::PIN_SPI2_MOSI,
     Catena::PIN_SPI2_MISO,
     Catena::PIN_SPI2_SCK
     );
 
-cADS131M04 ads = cADS131M04(D5, D12, &gSPI2);
+cADS131M04 gAds;
 
 /****************************************************************************\
 |
@@ -63,13 +68,21 @@ void setup()
     {
     gSPI2.begin();
 
-    ads.begin();
+    Serial.println("**** This is an example program to read RAW ADC data using ADS131M04 ****");
 
-    Serial.println("Initialised! Reading all Registers:");
+    if(! gAds.begin(&gSPI2))
+        {
+        Serial.println("ADS131M04 begin failed");
+        while(1);
+        }
+    else
+        {
+        Serial.println("ADS131M04 begin successfully!");
 
-    // Set chip select pins to high
-    pinMode(D5, OUTPUT);
-    digitalWrite(D5, HIGH);
+        // Set chip select pins to high
+        pinMode(D5, OUTPUT);
+        digitalWrite(D5, HIGH);
+        }
     }
 
 /*
@@ -92,28 +105,29 @@ void loop()
     uint8_t channel3 = 3;
     float FSR = 2.4;
     float BITS = 16777215;
+    float code;
 
     Serial.print("CH0(HEX)          : ");
-    Serial.println(ads.readSingleChannel(channel0), HEX);
-    float code = ads.readSingleChannel(channel0);
+    Serial.println(gAds.readSingleChannel(channel0), HEX);
+    code = gAds.readSingleChannel(channel0);
     Serial.print("CODE(DEC)         : ");
     Serial.println(code);
 
     Serial.print("CH1(HEX)          : ");
-    Serial.println(ads.readSingleChannel(channel1), HEX);
-    float code = ads.readSingleChannel(channel1);
+    Serial.println(gAds.readSingleChannel(channel1), HEX);
+    code = gAds.readSingleChannel(channel1);
     Serial.print("CODE(DEC)         : ");
     Serial.println(code);
 
     Serial.print("CH2(HEX)          : ");
-    Serial.println(ads.readSingleChannel(channel2), HEX);
-    float code = ads.readSingleChannel(channel2);
+    Serial.println(gAds.readSingleChannel(channel2), HEX);
+    code = gAds.readSingleChannel(channel2);
     Serial.print("CODE(DEC)         : ");
     Serial.println(code);
 
     Serial.print("CH3(HEX)          : ");
-    Serial.println(ads.readSingleChannel(channel3), HEX);
-    float code = ads.readSingleChannel(channel3);
+    Serial.println(gAds.readSingleChannel(channel3), HEX);
+    code = gAds.readSingleChannel(channel3);
     Serial.print("CODE(DEC)         : ");
     Serial.println(code);
 

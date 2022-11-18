@@ -18,23 +18,37 @@ Author:
 
 using namespace McciCatenaAds131m04;
 
-cADS131M04::cADS131M04(int8_t chipSelectPin, int8_t clockOutPin, SPIClass* pSpi, int8_t clockChannel)
+/*cADS131M04::cADS131M04(int8_t chipSelectPin, int8_t clockOutPin, SPIClass* pSpi, int8_t clockChannel)
     {
-    m_chipSelectPin = chipSelectPin;
-    m_clockOutPin = clockOutPin;
-    m_pSpi = pSpi;
-    m_clockChannel = clockChannel;
-    m_Initialized = false;
-    }
+    this->m_chipSelectPin = chipSelectPin;
+    this->m_clockOutPin = clockOutPin;
+    this->m_pSpi = pSpi;
+    this->m_clockChannel = clockChannel;
+    this->m_Initialized = false;
+    }*/
 
-cADS131M04::begin()
+bool cADS131M04::begin(SPIClass* pSpi, int8_t chipSelectPin, int8_t clockOutPin, int8_t clockChannel)
     {
-    pinMode(m_chipSelectPin, OUTPUT);
-    digitalWrite(m_chipSelectPin, HIGH);
+	if (pSpi == NULL)
+		{
+		// invalid parameter
+		Serial.println("pSpi is NULL");
+		return false;
+		}
 
-    m_pSpi->begin();
+    this->m_chipSelectPin = chipSelectPin;
+    this->m_clockOutPin = clockOutPin;
+    this->m_pSpi = pSpi;
+    this->m_clockChannel = clockChannel;
 
-    m_Initialized = true;
+    pinMode(this->m_chipSelectPin, OUTPUT);
+    digitalWrite(this->m_chipSelectPin, HIGH);
+
+    this->m_pSpi->begin();
+
+    this->m_Initialized = true;
+
+    return true;
     }
 
 void cADS131M04::readChannels(int8_t *pChannel, int8_t nChannel, int32_t *pOutput)
@@ -47,7 +61,7 @@ void cADS131M04::readChannels(int8_t *pChannel, int8_t nChannel, int32_t *pOutpu
     // Save the decoded data for each of the channels
     for (int8_t i = 0; i < nChannel; i++)
         {
-        *pOutput = twoCompDeco(rawData[*pChannel + 1]);
+        *pOutput = twoComplement(rawData[*pChannel + 1]);
         pOutput++;
         pChannel++;
         }
@@ -58,7 +72,7 @@ int32_t cADS131M04::readSingleChannel(int8_t channelNumber)
     int32_t pOutput[1];
     int8_t pChannel[1] = {channelNumber};
 
-    rawChannels(&pChannel[0], 1, &pOutput[0]);
+    readChannels(&pChannel[0], 1, &pOutput[0]);
 
     return pOutput[0];
     }
@@ -74,7 +88,7 @@ bool cADS131M04::setGain(uint8_t channelGain0, uint8_t channelGain1, uint8_t cha
     gainCommand += (channelGain1 <<4 );
     gainCommand += channelGain0;
 
-    result = writeReg(GBL_CH_SETTINGS_REG::GAIN, gainCommand);
+    result = writeRegister((std::uint8_t)GBL_CH_SETTINGS_REG::GAIN, gainCommand);
     return result;
     }
 
@@ -84,17 +98,19 @@ bool cADS131M04::globalChop(bool enable, uint8_t chopDelay)
     uint8_t delayData = chopDelay - 1;
 
     // Get current settings for current detect mode from the CFG register
-    uint16_t currentSetting = (readReg(GBL_CH_SETTINGS_REG::CONFIGURE) << 8) >>8;
+    uint16_t currentSetting = (readRegister((std::uint8_t)GBL_CH_SETTINGS_REG::CONFIGURE) << 8) >>8;
 
     uint16_t newData = (delayData << 12) + (enable << 8) + currentSetting;
 
-    result = writeReg(GBL_CH_SETTINGS_REG::CONFIGURE, newData);
+    result = writeRegister((std::uint8_t)GBL_CH_SETTINGS_REG::CONFIGURE, newData);
     return result;
     }
 
 uint16_t cADS131M04::readRegister(uint8_t registerAddr)
     {
-    uint16_t commandWord = (CommandPrefix::READ << 12) + (registerAddr << 7);
+    //uint8_t commandPrefix = CommandPrefix::READ;
+    // uint16_t commandWord = (int(CommandPrefix::READ) << 12) + (registerAddr << 7);
+    uint16_t commandWord = (int)(Command::Read) | (registerAddr << 7) | 0;
 
     uint32_t pBuffer[6];
 
@@ -109,10 +125,13 @@ uint16_t cADS131M04::readRegister(uint8_t registerAddr)
 
 bool cADS131M04::writeRegister(uint8_t registerAddr, uint16_t data)
     {
-    uint16_t commandWord = (CommandPrefix::WRITE << 12) + (registerAddr << 7);
+    //uint8_t commandPrefix = CommandPrefix::WRITE;
+    // uint16_t commandWord = (int(CommandPrefix::WRITE) << 12) + (registerAddr << 7);
 
-    digitalWrite(m_chipSelectPin, LOW);
-    m_pSpi->beginTransaction(SPISettings(SpeedSettings::SCLOCK, MSBFIRST, SPI_MODE1));
+    uint16_t commandWord = (int)(Command::Write) | (registerAddr << 7) | 0;
+
+    digitalWrite(this->m_chipSelectPin, LOW);
+    this->m_pSpi->beginTransaction(SPISettings((std::uint32_t)SpeedSettings::SerialClock, MSBFIRST, (std::uint8_t)SPI_MODE1));
 
     spiTransferWord(commandWord);
 
@@ -124,14 +143,15 @@ bool cADS131M04::writeRegister(uint8_t registerAddr, uint16_t data)
         spiTransferWord();
         }
 
-    m_pSpi->endTransaction();
-    digitalWrite(m_chipSelectPin, HIGH);
+    this->m_pSpi->endTransaction();
+    digitalWrite(this->m_chipSelectPin, HIGH);
 
     // Get response
     uint32_t pBuffer[6];
     spiCommFrame(&pBuffer[0]);
 
-    if ( ( (CommandResponse::WRITE << 12) + (registerAddr << 7) ) == pBuffer[0])
+    //commandPrefix = CommandResponse::WRITE;
+    if (((int)(Command::Write) | (registerAddr << 7) | 0) == pBuffer[0])
         {
         return true;
         }
@@ -143,9 +163,9 @@ bool cADS131M04::writeRegister(uint8_t registerAddr, uint16_t data)
 
 void cADS131M04::spiCommFrame(uint32_t * pOutput, uint16_t command)
     {
-    digitalWrite(m_chipSelectPin, LOW);
+    digitalWrite(this->m_chipSelectPin, LOW);
 
-    m_pSpi->beginTransaction(SPISettings(SpeedSettings::SCLOCK, MSBFIRST, SPI_MODE1));
+    this->m_pSpi->beginTransaction(SPISettings((std::uint32_t)SpeedSettings::SerialClock, MSBFIRST, (std::uint8_t)SPI_MODE1));
 
     // Send the command in the first word
     *pOutput = spiTransferWord(command);
@@ -161,23 +181,23 @@ void cADS131M04::spiCommFrame(uint32_t * pOutput, uint16_t command)
     pOutput++;
     *pOutput = spiTransferWord();
 
-    m_pSpi->endTransaction();
+    this->m_pSpi->endTransaction();
 
-    digitalWrite(m_chipSelectPin, HIGH);
+    digitalWrite(this->m_chipSelectPin, HIGH);
     }
 
 uint32_t cADS131M04::spiTransferWord(uint16_t inputData)
     {
-    uint32_t data = m_pSpi->transfer(inputData >> 8);
+    uint32_t data = this->m_pSpi->transfer(inputData >> 8);
     data <<= 8;
-    data |= m_pSpi->transfer((inputData<<8) >> 8);
+    data |= this->m_pSpi->transfer((inputData<<8) >> 8);
     data <<= 8;
-    data |= m_pSpi->transfer(0x00);
+    data |= this->m_pSpi->transfer(0x00);
 
     return data << 8;
     }
 
-int32_t cADS131M04::twoCompDeco(uint32_t data)
+int32_t cADS131M04::twoComplement(uint32_t data)
     {
     data <<= 8;
     int32_t intData = (int)data;
