@@ -193,6 +193,18 @@ public:
     bool begin(SPIClass* pSpi, int8_t chipSelectPin = D5, int8_t clockOutPin = D12, int8_t clockChannel = 1);
 
     ///
+    /// \brief reads product information.
+    ///
+    bool readProdInfo();
+
+    ///
+    /// \brief resets the ADS131M04.
+    ///
+    bool reset();
+
+    //uint16_t readID();
+
+    ///
     /// \brief reads all channels raw data.
     ///
     /// \param [out] pChannel points to the buffer to receive the data

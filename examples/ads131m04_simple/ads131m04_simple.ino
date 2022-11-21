@@ -66,9 +66,10 @@ Returns:
 
 void setup()
     {
-    gSPI2.begin();
-
     Serial.println("**** This is an example program to read RAW ADC data using ADS131M04 ****");
+
+    gCatena.begin();
+    gSPI2.begin();
 
     if(! gAds.begin(&gSPI2))
         {
@@ -103,9 +104,21 @@ void loop()
     uint8_t channel1 = 1;
     uint8_t channel2 = 2;
     uint8_t channel3 = 3;
+    //uint8_t id = gAds.readRegister((std::uint8_t)gAds.READ_ONLY_REG::ID);
+    //uint8_t id = (std::uint8_t) gAds.READ_ONLY_REG::ID;
     float FSR = 2.4;
     float BITS = 16777215;
     float code;
+
+    /*Serial.print("Writing: ");
+    Serial.print("Write Success? [1]Yes [0]No :");
+    Serial.println(gAds.writeRegister(0x04,0x6767));
+    Serial.print("Reading: 0x00");
+    Serial.println(gAds.readRegister(0x04), HEX);*/
+
+    //uint16_t registerData = gAds.readRegister(id);
+    //Serial.print("Reading: 0x00");
+    //Serial.println(gAds.readID(), HEX);
 
     Serial.print("CH0(HEX)          : ");
     Serial.println(gAds.readSingleChannel(channel0), HEX);
@@ -134,4 +147,6 @@ void loop()
     Serial.println("");
     Serial.println("####################################");
     Serial.println("");
+
+    delay(1000);
     }

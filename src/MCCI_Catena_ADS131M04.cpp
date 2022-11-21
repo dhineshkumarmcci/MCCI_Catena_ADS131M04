@@ -29,12 +29,12 @@ using namespace McciCatenaAds131m04;
 
 bool cADS131M04::begin(SPIClass* pSpi, int8_t chipSelectPin, int8_t clockOutPin, int8_t clockChannel)
     {
-	if (pSpi == NULL)
-		{
-		// invalid parameter
-		Serial.println("pSpi is NULL");
-		return false;
-		}
+    if (pSpi == NULL)
+        {
+        // invalid parameter
+        Serial.println("pSpi is NULL");
+        return false;
+        }
 
     this->m_chipSelectPin = chipSelectPin;
     this->m_clockOutPin = clockOutPin;
@@ -48,7 +48,25 @@ bool cADS131M04::begin(SPIClass* pSpi, int8_t chipSelectPin, int8_t clockOutPin,
 
     this->m_Initialized = true;
 
-    return true;
+    bool result = this->reset();
+    return result;
+    }
+
+bool cADS131M04::reset()
+    {
+    if(writeRegister((std::uint8_t)Command::Reset, true))
+        {
+        delay(3000);
+        return true;
+        }
+    else
+        {
+        return false;
+        }
+    }
+
+bool cADS131M04::readProdInfo()
+    {
     }
 
 void cADS131M04::readChannels(int8_t *pChannel, int8_t nChannel, int32_t *pOutput)
