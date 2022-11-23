@@ -156,8 +156,8 @@ public:
     /// \brief  Speed
     enum class SpeedSettings : std::uint32_t
         {
-        ClockIn                            = 8192000,
-        SerialClock                              = 25000000,
+        ClockIn                             = 8192000,
+        SerialClock                         = 25000000,
         };
 
     /// \brief  Command Prefix for Command Word
@@ -173,9 +173,14 @@ public:
         Read                                = 0xA000,
         };
 
-    /// \brief  Registers reserved
+    /// \brief  Command Responses
     enum class  CommandResponse : std::uint16_t
         {
+        Reset                               = 0xFF24,
+        Standby                             = 0x0022,
+        WakeUp                              = 0x0033,
+        Lock                                = 0x0555,
+        Unlock                              = 0x0655,
         Write                               = 0x4000,
         };
 
@@ -193,9 +198,9 @@ public:
     bool begin(SPIClass* pSpi, int8_t chipSelectPin = D5, int8_t clockOutPin = D12, int8_t clockChannel = 1);
 
     ///
-    /// \brief reads product information.
+    /// \brief check connectivity before begin.
     ///
-    bool readProdInfo();
+    bool readCheck();
 
     ///
     /// \brief resets the ADS131M04.
