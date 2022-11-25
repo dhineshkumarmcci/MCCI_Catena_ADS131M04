@@ -121,7 +121,7 @@ public:
         GCAL_LSB                            = 0x12,
         };
 
-    /// \brief  Registers Channel 1 Specific Settings
+    /// \brief  Registers Channel 2 Specific Settings
     enum class CH2_SETTINGS_REG : std::uint8_t
         {
         CONFIGURE                           = 0x13,
@@ -131,7 +131,7 @@ public:
         GCAL_LSB                            = 0x17,
         };
 
-    /// \brief  Registers Channel 1 Specific Settings
+    /// \brief  Registers Channel 3 Specific Settings
     enum class CH3_SETTINGS_REG : std::uint8_t
         {
         CONFIGURE                           = 0x18,
@@ -204,18 +204,12 @@ public:
     bool begin(SPIClass* pSpi, int8_t chipSelectPin = D5, int8_t clockOutPin = D12, int8_t clockChannel = 1);
 
     ///
-    /// \brief check connectivity before begin.
+    /// \brief Read ID and check connectivity before begin.
     ///
-    bool readCheck();
-
+    /// \return
+    ///     \c true for success, \c false for failure.
+    ///
     bool readID();
-
-    ///
-    /// \brief resets the ADS131M04.
-    ///
-    bool reset();
-
-    //uint16_t readID();
 
     ///
     /// \brief reads all channels raw data.
@@ -234,8 +228,16 @@ public:
     /// \return
     ///     \c rawData from the specific channel
     ///
-    int32_t readSingleChannel(int8_t channelNumber);
+    int32_t readSingleChannel(uint8_t channelNumber);
 
+    /// \brief converts code to voltage for a given channel.
+    ///
+    /// \param [in] channelNumber is the desired channel's number for voltage conversion.
+    /// 
+    /// @return
+    ///     \c voltage converted from the code.
+    ///
+    float readVoltage(uint8_t channelNumber);
 
     ///
     /// \brief sets the gain for four channels of ADC
@@ -250,7 +252,6 @@ public:
     ///
     bool setGain(uint8_t channelGain0 = 1, uint8_t channelGain1 = 1, uint8_t channelGain2 = 1, uint8_t channelGain3 = 1);
 
-
     ///
     /// \brief enable and configure global-chop settings
     ///
@@ -260,7 +261,7 @@ public:
     /// \return
     ///     \c true for success, \c false for failure.
     ///
-    bool globalChop(bool enable = false, uint8_t chopDelay = 7);
+    bool globalChop(bool enable = false, uint8_t chopDelay = 4);
 
 protected:
     ///
@@ -289,6 +290,8 @@ private:
     int8_t m_chipSelectPin, m_clockOutPin, m_clockChannel;
     SPIClass* m_pSpi;
     bool m_Initialized;
+    float m_fsr = 1.2;
+    uint32_t m_bits = 8388607;
 
     ///
     /// \brief forms a SPI communication frame.

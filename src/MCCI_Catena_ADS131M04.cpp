@@ -18,15 +18,6 @@ Author:
 
 using namespace McciCatenaAds131m04;
 
-/*cADS131M04::cADS131M04(int8_t chipSelectPin, int8_t clockOutPin, SPIClass* pSpi, int8_t clockChannel)
-    {
-    this->m_chipSelectPin = chipSelectPin;
-    this->m_clockOutPin = clockOutPin;
-    this->m_pSpi = pSpi;
-    this->m_clockChannel = clockChannel;
-    this->m_Initialized = false;
-    }*/
-
 bool cADS131M04::begin(SPIClass* pSpi, int8_t chipSelectPin, int8_t clockOutPin, int8_t clockChannel)
     {
     if (pSpi == NULL)
@@ -50,88 +41,18 @@ bool cADS131M04::begin(SPIClass* pSpi, int8_t chipSelectPin, int8_t clockOutPin,
 
     bool result = this->readID();
     return result;
-    // return true;
-    }
-
-bool cADS131M04::reset()
-    {
-    uint16_t commandWord = (int)(Command::Reset); // | (registerAddr << 7) | 0;
-
-    digitalWrite(this->m_chipSelectPin, LOW);
-    this->m_pSpi->beginTransaction(SPISettings((std::uint32_t)SpeedSettings::SerialClock, MSBFIRST, (std::uint8_t)SPI_MODE1));
-
-    this->spiTransferWord(commandWord);
-
-    // Send 5 empty words
-    for (uint8_t i = 0; i < 5; i++)
-        {
-        this->spiTransferWord();
-        }
-
-    this->m_pSpi->endTransaction();
-    digitalWrite(this->m_chipSelectPin, HIGH);
-
-    // Get response
-    uint32_t pBuffer[6];
-    this->spiCommFrame(&pBuffer[0]);
-
-    //commandPrefix = CommandResponse::WRITE;
-    if ((int)(CommandResponse::Reset) == pBuffer[0]) //| (registerAddr << 7) | 0) == pBuffer[0])
-        {
-        return true;
-        }
-    else
-        {
-        return false;
-        }
-    }
-
-bool cADS131M04::readCheck()
-    {
-    uint16_t oldData = this->readRegister((std::uint8_t)GBL_CH_SETTINGS_REG::GAIN);
-    Serial.print("oldData : 0x");
-    Serial.println(oldData, HEX);
-
-    uint16_t newData = 0x50F;
-    this->writeRegister((std::uint8_t)GBL_CH_SETTINGS_REG::GAIN, newData);
-    uint16_t readData = this->readRegister((std::uint8_t)GBL_CH_SETTINGS_REG::GAIN);
-
-    if (readData != newData)
-        {
-        Serial.println("readCheck Fail");
-        Serial.print("readData : 0x");
-        Serial.println(readData, HEX);
-        return false;
-        }
-    else
-        {
-        Serial.println("readCheck Passed");
-        Serial.print("readData : 0x");
-        Serial.println(readData, HEX);
-        //this->writeRegister((std::uint8_t)GBL_CH_SETTINGS_REG::GAIN, oldData);
-        return true;
-        }
     }
 
 bool cADS131M04::readID()
     {
     uint16_t idData = this->readRegister((std::uint8_t)READ_ONLY_REG::ID);
-    Serial.print("idData : 0x");
-    Serial.println(idData, HEX);
-    // uint16_t defaultData = 0x2403;
 
     if (idData != (std::uint16_t)readID::ID)
         {
-        Serial.println("idCheck Fail");
-        Serial.print("idData : 0x");
-        Serial.println(idData, HEX);
         return false;
         }
     else
         {
-        Serial.println("gainCheck Passed");
-        Serial.print("idData : 0x");
-        Serial.println(idData, HEX);
         return true;
         }
     }
@@ -152,14 +73,25 @@ void cADS131M04::readChannels(int8_t *pChannel, int8_t nChannel, int32_t *pOutpu
         }
     }
 
-int32_t cADS131M04::readSingleChannel(int8_t channelNumber)
+int32_t cADS131M04::readSingleChannel(uint8_t channelNumber)
     {
     int32_t pOutput[1];
     int8_t pChannel[1] = {channelNumber};
 
-    this->readChannels(&pChannel[0], 1, &pOutput[0]);
+    this->readChannels(&pChannel[0], sizeof(pChannel), &pOutput[0]);
 
     return pOutput[0];
+    }
+
+float cADS131M04::readVoltage(uint8_t channelNumber)
+    {
+    int32_t code;
+    float voltage;
+
+    code = this->readSingleChannel(channelNumber);
+    voltage = (code / (float)this->m_bits) * this->m_fsr;
+
+    return voltage;
     }
 
 bool cADS131M04::setGain(uint8_t channelGain0, uint8_t channelGain1, uint8_t channelGain2, uint8_t channelGain3)
@@ -167,11 +99,12 @@ bool cADS131M04::setGain(uint8_t channelGain0, uint8_t channelGain1, uint8_t cha
     uint16_t gainCommand;
     bool result;
 
-    gainCommand = channelGain3 << 4;
-    gainCommand += channelGain2;
-    gainCommand <<= 8;
-    gainCommand += (channelGain1 <<4 );
-    gainCommand += channelGain0;
+    gainCommand = channelGain3 << 12;
+    gainCommand = gainCommand | channelGain2;
+    gainCommand = gainCommand << 8;
+    gainCommand = gainCommand | channelGain1;
+    gainCommand = gainCommand << 4;
+    gainCommand = gainCommand | channelGain0;
 
     result = this->writeRegister((std::uint8_t)GBL_CH_SETTINGS_REG::GAIN, gainCommand);
     return result;
@@ -193,8 +126,6 @@ bool cADS131M04::globalChop(bool enable, uint8_t chopDelay)
 
 uint16_t cADS131M04::readRegister(uint8_t registerAddr)
     {
-    //uint8_t commandPrefix = CommandPrefix::READ;
-    // uint16_t commandWord = (int(CommandPrefix::READ) << 12) + (registerAddr << 7);
     uint16_t commandWord = (int)(Command::Read) | (registerAddr << 7) | 0;
 
     uint32_t pBuffer[6];
@@ -210,9 +141,6 @@ uint16_t cADS131M04::readRegister(uint8_t registerAddr)
 
 bool cADS131M04::writeRegister(uint8_t registerAddr, uint16_t data)
     {
-    //uint8_t commandPrefix = CommandPrefix::WRITE;
-    // uint16_t commandWord = (int(CommandPrefix::WRITE) << 12) + (registerAddr << 7);
-
     uint16_t commandWord = (int)(Command::Write) | (registerAddr << 7) | 0;
 
     digitalWrite(this->m_chipSelectPin, LOW);
@@ -235,7 +163,6 @@ bool cADS131M04::writeRegister(uint8_t registerAddr, uint16_t data)
     uint32_t pBuffer[6];
     this->spiCommFrame(&pBuffer[0]);
 
-    //commandPrefix = CommandResponse::WRITE;
     if (((int)(CommandResponse::Write) | (registerAddr << 7) | 0) == pBuffer[0])
         {
         return true;
