@@ -48,8 +48,9 @@ bool cADS131M04::begin(SPIClass* pSpi, int8_t chipSelectPin, int8_t clockOutPin,
 
     this->m_Initialized = true;
 
-    bool result = this->readCheck();
+    bool result = this->readID();
     return result;
+    // return true;
     }
 
 bool cADS131M04::reset()
@@ -87,7 +88,11 @@ bool cADS131M04::reset()
 
 bool cADS131M04::readCheck()
     {
-    uint16_t newData = 0x6767;
+    uint16_t oldData = this->readRegister((std::uint8_t)GBL_CH_SETTINGS_REG::GAIN);
+    Serial.print("oldData : 0x");
+    Serial.println(oldData, HEX);
+
+    uint16_t newData = 0x50F;
     this->writeRegister((std::uint8_t)GBL_CH_SETTINGS_REG::GAIN, newData);
     uint16_t readData = this->readRegister((std::uint8_t)GBL_CH_SETTINGS_REG::GAIN);
 
@@ -103,6 +108,30 @@ bool cADS131M04::readCheck()
         Serial.println("readCheck Passed");
         Serial.print("readData : 0x");
         Serial.println(readData, HEX);
+        //this->writeRegister((std::uint8_t)GBL_CH_SETTINGS_REG::GAIN, oldData);
+        return true;
+        }
+    }
+
+bool cADS131M04::readID()
+    {
+    uint16_t idData = this->readRegister((std::uint8_t)READ_ONLY_REG::ID);
+    Serial.print("idData : 0x");
+    Serial.println(idData, HEX);
+    // uint16_t defaultData = 0x2403;
+
+    if (idData != (std::uint16_t)readID::ID)
+        {
+        Serial.println("idCheck Fail");
+        Serial.print("idData : 0x");
+        Serial.println(idData, HEX);
+        return false;
+        }
+    else
+        {
+        Serial.println("gainCheck Passed");
+        Serial.print("idData : 0x");
+        Serial.println(idData, HEX);
         return true;
         }
     }

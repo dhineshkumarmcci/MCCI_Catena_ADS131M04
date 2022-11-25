@@ -106,9 +106,11 @@ void loop()
     uint8_t channel3 = 3;
     //uint8_t id = gAds.readRegister((std::uint8_t)gAds.READ_ONLY_REG::ID);
     //uint8_t id = (std::uint8_t) gAds.READ_ONLY_REG::ID;
-    float FSR = 2.4;
-    float BITS = 16777215;
+    float fsr = 1.2;
+    float bits = 8388607;
     float code;
+    float volBits;
+    float voltage;
 
     /*Serial.print("Writing: ");
     Serial.print("Write Success? [1]Yes [0]No :");
@@ -120,29 +122,64 @@ void loop()
     //Serial.print("Reading: 0x00");
     //Serial.println(gAds.readID(), HEX);
 
-    Serial.print("CH0(HEX)          : ");
-    Serial.println(gAds.readSingleChannel(channel0), HEX);
+    //Serial.print("CH0(HEX)          : ");
+    //Serial.println(gAds.readSingleChannel(channel0), HEX);
     code = gAds.readSingleChannel(channel0);
     Serial.print("CODE(DEC)         : ");
     Serial.println(code);
+    Serial.print("CODE(HEX)         : ");
+    Serial.println(code);
 
-    Serial.print("CH1(HEX)          : ");
-    Serial.println(gAds.readSingleChannel(channel1), HEX);
+    volBits = code / bits;
+    voltage = volBits * fsr;          // included *2 because of voltage divider in test setup
+    Serial.print("CH0 Voltage IN    : ");
+    Serial.print(voltage, 3);
+    Serial.println(" V");
+    Serial.println("");
+
+    //Serial.print("CH1(HEX)          : ");
+    //Serial.println(gAds.readSingleChannel(channel1), HEX);
     code = gAds.readSingleChannel(channel1);
     Serial.print("CODE(DEC)         : ");
     Serial.println(code);
+    Serial.print("CODE(HEX)         : ");
+    Serial.println(code);
 
-    Serial.print("CH2(HEX)          : ");
-    Serial.println(gAds.readSingleChannel(channel2), HEX);
+    volBits = code / bits;
+    voltage = volBits * fsr;          // included *2 because of voltage divider in test setup
+    Serial.print("CH1 Voltage IN    : ");
+    Serial.print(voltage, 3);
+    Serial.println(" V");
+    Serial.println("");
+
+    //Serial.print("CH2(HEX)          : ");
+    //Serial.println(gAds.readSingleChannel(channel2), HEX);
     code = gAds.readSingleChannel(channel2);
     Serial.print("CODE(DEC)         : ");
     Serial.println(code);
+    Serial.print("CODE(HEX)         : ");
+    Serial.println(code);
 
-    Serial.print("CH3(HEX)          : ");
-    Serial.println(gAds.readSingleChannel(channel3), HEX);
+    volBits = code / bits;
+    voltage = volBits * fsr;          // included *2 because of voltage divider in test setup
+    Serial.print("CH2 Voltage IN    : ");
+    Serial.print(voltage, 3);
+    Serial.println(" V");
+    Serial.println("");
+
+    //Serial.print("CH3(HEX)          : ");
+    //Serial.println(gAds.readSingleChannel(channel3), HEX);
     code = gAds.readSingleChannel(channel3);
     Serial.print("CODE(DEC)         : ");
     Serial.println(code);
+    Serial.print("CODE(HEX)         : ");
+    Serial.println(code);
+
+    volBits = code / bits;
+    voltage = volBits * fsr;          // included *2 because of voltage divider in test setup
+    Serial.print("CH3 Voltage IN    : ");
+    Serial.print(voltage, 3);
+    Serial.println(" V");
 
     Serial.println("");
     Serial.println("####################################");

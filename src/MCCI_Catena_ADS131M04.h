@@ -184,6 +184,12 @@ public:
         Write                               = 0x4000,
         };
 
+    /// \brief  Read-Only ID value
+    enum class  readID : std::uint16_t
+        {
+        ID                                  = 0x2403,
+        };
+
     ///
     /// \brief Power up the ADS131M04 and start operation.
     ///
@@ -201,6 +207,8 @@ public:
     /// \brief check connectivity before begin.
     ///
     bool readCheck();
+
+    bool readID();
 
     ///
     /// \brief resets the ADS131M04.
@@ -240,7 +248,7 @@ public:
     /// \return
     ///     \c true for success, \c false for failure.
     ///
-    bool setGain(uint8_t channelGain0 = 0, uint8_t channelGain1 = 0, uint8_t channelGain2 = 0, uint8_t channelGain3 = 0);
+    bool setGain(uint8_t channelGain0 = 1, uint8_t channelGain1 = 1, uint8_t channelGain2 = 1, uint8_t channelGain3 = 1);
 
 
     ///
