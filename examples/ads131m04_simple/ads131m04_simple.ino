@@ -71,7 +71,7 @@ void setup()
     gCatena.begin();
     gSPI2.begin();
 
-    if(! gAds.begin(&gSPI2))
+    if(! gAds.begin(&gSPI2, D16, D17))
         {
         Serial.println("ADS131M04 begin failed");
         while(1);
@@ -105,30 +105,54 @@ void loop()
     uint8_t channel2 = 2;
     uint8_t channel3 = 3;
     float voltage;
+    float concentration;
 
-    voltage = gAds.readVoltage(channel0);
-    Serial.print("CH0 Voltage IN    : ");
-    Serial.print(voltage, 3);
-    Serial.println(" V");
+    if (gAds.isDataReady())
+        {
+        voltage = gAds.readVoltage(channel0);
+        Serial.print("CH0 Voltage IN    : ");
+        Serial.print(voltage, 3);
+        Serial.println(" V");
+        concentration = gAds.readCO(channel0);
+        Serial.print("CO2 concentration : ");
+        Serial.print(concentration, 3);
+        Serial.println(" ppm");
+        Serial.println("");
 
-    voltage = gAds.readVoltage(channel1);
-    Serial.print("CH2 Voltage IN    : ");
-    Serial.print(voltage, 3);
-    Serial.println(" V");
+        voltage = gAds.readVoltage(channel1);
+        Serial.print("CH2 Voltage IN    : ");
+        Serial.print(voltage, 3);
+        Serial.println(" V");
+        concentration = gAds.readNO2(channel1);
+        Serial.print("NO2 concentration : ");
+        Serial.print(concentration, 3);
+        Serial.println(" ppm");
+        Serial.println("");
 
-    voltage = gAds.readVoltage(channel2);
-    Serial.print("CH3 Voltage IN    : ");
-    Serial.print(voltage, 3);
-    Serial.println(" V");
+        voltage = gAds.readVoltage(channel2);
+        Serial.print("CH3 Voltage IN    : ");
+        Serial.print(voltage, 3);
+        Serial.println(" V");
+        concentration = gAds.readO3(channel2);
+        Serial.print("O3  concentration : ");
+        Serial.print(concentration, 3);
+        Serial.println(" ppm");
+        Serial.println("");
 
-    voltage = gAds.readVoltage(channel3);
-    Serial.print("CH4 Voltage IN    : ");
-    Serial.print(voltage, 3);
-    Serial.println(" V");
+        voltage = gAds.readVoltage(channel3);
+        Serial.print("CH4 Voltage IN    : ");
+        Serial.print(voltage, 3);
+        Serial.println(" V");
+        concentration = gAds.readSO2(channel3);
+        Serial.print("SO2  concentration : ");
+        Serial.print(concentration, 3);
+        Serial.println(" ppm");
+        Serial.println("");
 
-    Serial.println("");
-    Serial.println("####################################");
-    Serial.println("");
+        Serial.println("");
+        Serial.println("####################################");
+        Serial.println("");
 
-    delay(1000);
+        delay(1000);
+        }
     }

@@ -195,13 +195,12 @@ public:
     ///
     /// \param [in] pSpi is SPI bus to use for ADS131M04.
     /// \param [in] chipSelectPin is to set NSS pin.
-    /// \param [in] clockOutPin is to set clock pin.
-    /// \param [in] clockChannel is a LEDC channel used to generate the master clock for the ADC.
+    /// \param [in] drdy is a data ready pin.
     ///
     /// \return
     ///     \c true for success, \c false for failure.
     ///
-    bool begin(SPIClass* pSpi, int8_t chipSelectPin = D5, int8_t clockOutPin = D12, int8_t clockChannel = 1);
+    bool begin(SPIClass* pSpi, int8_t chipSelectPin, int8_t drdy);
 
     ///
     /// \brief Read ID and check connectivity before begin.
@@ -210,6 +209,14 @@ public:
     ///     \c true for success, \c false for failure.
     ///
     bool readID();
+
+    ///
+    /// \brief Check if there is any new data present.
+    ///
+    /// \return
+    ///     \c true for success, \c false for failure.
+    ///
+    bool isDataReady();
 
     ///
     /// \brief reads all channels raw data.
@@ -238,6 +245,42 @@ public:
     ///     \c voltage converted from the code.
     ///
     float readVoltage(uint8_t channelNumber);
+
+    /// \brief converts voltage to CO concentration for a given channel.
+    ///
+    /// \param [in] channelNumber is the desired channel's number for conversion.
+    /// 
+    /// @return
+    ///     \c concentration converted from the voltage.
+    ///
+    float readCO(uint8_t channelNumber = 0);
+
+    /// \brief converts voltage to NO2 concentration for a given channel.
+    ///
+    /// \param [in] channelNumber is the desired channel's number for conversion.
+    /// 
+    /// @return
+    ///     \c concentration converted from the voltage.
+    ///
+    float readNO2(uint8_t channelNumber = 1);
+
+    /// \brief converts voltage to O3 concentration for a given channel.
+    ///
+    /// \param [in] channelNumber is the desired channel's number for conversion.
+    /// 
+    /// @return
+    ///     \c concentration converted from the voltage.
+    ///
+    float readO3(uint8_t channelNumber = 2);
+
+    /// \brief converts voltage to SO2 concentration for a given channel.
+    ///
+    /// \param [in] channelNumber is the desired channel's number for conversion.
+    /// 
+    /// @return
+    ///     \c vconcentration converted from the voltage.
+    ///
+    float readSO2(uint8_t channelNumber = 3);
 
     ///
     /// \brief sets the gain for four channels of ADC
@@ -287,11 +330,13 @@ protected:
     bool writeRegister(uint8_t registerAddr, uint16_t data);
 
 private:
-    int8_t m_chipSelectPin, m_clockOutPin, m_clockChannel;
+    int8_t m_chipSelectPin, m_drdy;
     SPIClass* m_pSpi;
     bool m_Initialized;
     float m_fsr = 1.2;
     uint32_t m_bits = 8388607;
+    float m_calibrationFactorCO = (1 / 0.000427);
+    float m_vGasZero = 1.65;
 
     ///
     /// \brief forms a SPI communication frame.
