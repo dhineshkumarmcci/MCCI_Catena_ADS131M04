@@ -196,11 +196,12 @@ public:
     /// \param [in] pSpi is SPI bus to use for ADS131M04.
     /// \param [in] chipSelectPin is to set NSS pin.
     /// \param [in] drdy is a data ready pin.
+    /// \param [in] syncPin is a sync/reset pin.
     ///
     /// \return
     ///     \c true for success, \c false for failure.
     ///
-    bool begin(SPIClass* pSpi, int8_t chipSelectPin, int8_t drdy);
+    bool begin(SPIClass* pSpi, int8_t chipSelectPin, int8_t syncPin, int8_t drdy);
 
     ///
     /// \brief Read ID and check connectivity before begin.
@@ -330,7 +331,7 @@ protected:
     bool writeRegister(uint8_t registerAddr, uint16_t data);
 
 private:
-    int8_t m_chipSelectPin, m_drdy;
+    int8_t m_chipSelectPin, m_drdy, m_syncPin;
     SPIClass* m_pSpi;
     bool m_Initialized;
     float m_fsr = 1.2;

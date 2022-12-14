@@ -66,12 +66,13 @@ Returns:
 
 void setup()
     {
-    Serial.println("**** This is an example program to read RAW ADC data using ADS131M04 ****");
-
     gCatena.begin();
     gSPI2.begin();
+    Serial.begin(115200);
 
-    if(! gAds.begin(&gSPI2, D16, D17))
+    Serial.println("**** This is an example program to read raw ADC to voltage from 4 channels of ADS131M04 ****");
+
+    if(! gAds.begin(&gSPI2, D5, D11, D12)) // pins for model 4916 prototype testing using catena 4618.
         {
         Serial.println("ADS131M04 begin failed");
         while(1);
@@ -79,10 +80,6 @@ void setup()
     else
         {
         Serial.println("ADS131M04 begin successfully!");
-
-        // Set chip select pins to high
-        pinMode(D5, OUTPUT);
-        digitalWrite(D5, HIGH);
         }
     }
 
@@ -113,41 +110,21 @@ void loop()
         Serial.print("CH0 Voltage IN    : ");
         Serial.print(voltage, 3);
         Serial.println(" V");
-        concentration = gAds.readCO(channel0);
-        Serial.print("CO2 concentration : ");
-        Serial.print(concentration, 3);
-        Serial.println(" ppm");
-        Serial.println("");
 
         voltage = gAds.readVoltage(channel1);
         Serial.print("CH2 Voltage IN    : ");
         Serial.print(voltage, 3);
         Serial.println(" V");
-        concentration = gAds.readNO2(channel1);
-        Serial.print("NO2 concentration : ");
-        Serial.print(concentration, 3);
-        Serial.println(" ppm");
-        Serial.println("");
 
         voltage = gAds.readVoltage(channel2);
         Serial.print("CH3 Voltage IN    : ");
         Serial.print(voltage, 3);
         Serial.println(" V");
-        concentration = gAds.readO3(channel2);
-        Serial.print("O3  concentration : ");
-        Serial.print(concentration, 3);
-        Serial.println(" ppm");
-        Serial.println("");
 
         voltage = gAds.readVoltage(channel3);
         Serial.print("CH4 Voltage IN    : ");
         Serial.print(voltage, 3);
         Serial.println(" V");
-        concentration = gAds.readSO2(channel3);
-        Serial.print("SO2  concentration : ");
-        Serial.print(concentration, 3);
-        Serial.println(" ppm");
-        Serial.println("");
 
         Serial.println("");
         Serial.println("####################################");

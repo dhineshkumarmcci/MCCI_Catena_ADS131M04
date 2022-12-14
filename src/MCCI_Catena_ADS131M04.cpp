@@ -18,7 +18,7 @@ Author:
 
 using namespace McciCatenaAds131m04;
 
-bool cADS131M04::begin(SPIClass* pSpi, int8_t chipSelectPin, int8_t drdy)
+bool cADS131M04::begin(SPIClass* pSpi, int8_t chipSelectPin, int8_t syncPin, int8_t drdy)
     {
     if (pSpi == NULL)
         {
@@ -30,6 +30,7 @@ bool cADS131M04::begin(SPIClass* pSpi, int8_t chipSelectPin, int8_t drdy)
     this->m_chipSelectPin = chipSelectPin;
     this->m_pSpi = pSpi;
     this->m_drdy = drdy;
+    this->m_syncPin = syncPin;
 
     this->m_pSpi->begin();
 
@@ -103,58 +104,6 @@ float cADS131M04::readVoltage(uint8_t channelNumber)
     voltage = (code / (float)this->m_bits) * this->m_fsr;
 
     return voltage;
-    }
-
-float cADS131M04::readCO(uint8_t channelNumber)
-    {
-    float voltage;
-    float gasConcentration;
-
-    voltage = this->readVoltage(channelNumber);
-
-    float Vgas = voltage - this->m_vGasZero;
-    gasConcentration = this->m_calibrationFactorCO * Vgas;
-
-    return gasConcentration;
-    }
-
-float cADS131M04::readNO2(uint8_t channelNumber)
-    {
-    float voltage;
-    float gasConcentration;
-
-    voltage = this->readVoltage(channelNumber);
-
-    float Vgas = voltage - this->m_vGasZero;
-    gasConcentration = this->m_calibrationFactorCO * Vgas;
-
-    return gasConcentration;
-    }
-
-float cADS131M04::readO3(uint8_t channelNumber)
-    {
-    float voltage;
-    float gasConcentration;
-
-    voltage = this->readVoltage(channelNumber);
-
-    float Vgas = voltage - this->m_vGasZero;
-    gasConcentration = this->m_calibrationFactorCO * Vgas;
-
-    return gasConcentration;
-    }
-
-float cADS131M04::readSO2(uint8_t channelNumber)
-    {
-    float voltage;
-    float gasConcentration;
-
-    voltage = this->readVoltage(channelNumber);
-
-    float Vgas = voltage - this->m_vGasZero;
-    gasConcentration = this->m_calibrationFactorCO * Vgas;
-
-    return gasConcentration;
     }
 
 bool cADS131M04::setGain(uint8_t channelGain0, uint8_t channelGain1, uint8_t channelGain2, uint8_t channelGain3)
