@@ -247,42 +247,6 @@ public:
     ///
     float readVoltage(uint8_t channelNumber);
 
-    /// \brief converts voltage to CO concentration for a given channel.
-    ///
-    /// \param [in] channelNumber is the desired channel's number for conversion.
-    /// 
-    /// @return
-    ///     \c concentration converted from the voltage.
-    ///
-    float readCO(uint8_t channelNumber = 0);
-
-    /// \brief converts voltage to NO2 concentration for a given channel.
-    ///
-    /// \param [in] channelNumber is the desired channel's number for conversion.
-    /// 
-    /// @return
-    ///     \c concentration converted from the voltage.
-    ///
-    float readNO2(uint8_t channelNumber = 1);
-
-    /// \brief converts voltage to O3 concentration for a given channel.
-    ///
-    /// \param [in] channelNumber is the desired channel's number for conversion.
-    /// 
-    /// @return
-    ///     \c concentration converted from the voltage.
-    ///
-    float readO3(uint8_t channelNumber = 2);
-
-    /// \brief converts voltage to SO2 concentration for a given channel.
-    ///
-    /// \param [in] channelNumber is the desired channel's number for conversion.
-    /// 
-    /// @return
-    ///     \c vconcentration converted from the voltage.
-    ///
-    float readSO2(uint8_t channelNumber = 3);
-
     ///
     /// \brief sets the gain for four channels of ADC
     ///
