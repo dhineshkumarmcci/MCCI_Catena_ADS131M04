@@ -300,8 +300,6 @@ private:
     bool m_Initialized;
     float m_fsr = 1.2;
     uint32_t m_bits = 8388607;
-    float m_calibrationFactorCO = (1 / 0.000427);
-    float m_vGasZero = 1.65;
 
     ///
     /// \brief forms a SPI communication frame.
