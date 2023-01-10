@@ -23,7 +23,6 @@ bool cADS131M04::begin(SPIClass* pSpi, int8_t chipSelectPin, int8_t syncPin, int
     if (pSpi == NULL)
         {
         // invalid parameter
-        Serial.println("pSpi is NULL");
         return false;
         }
 
@@ -49,7 +48,8 @@ bool cADS131M04::readID()
     {
     uint16_t idData = this->readRegister((std::uint8_t)READ_ONLY_REG::ID);
 
-    if (idData != (std::uint16_t)readID::ID)
+    uint16_t compID = (std::uint16_t)readID::ID;
+    if ((idData >> 8) != (compID >> 8))
         {
         return false;
         }
@@ -67,6 +67,58 @@ bool cADS131M04::isDataReady()
         }
 
     return true;
+    }
+
+int8_t cADS131M04::isDataReadySoft(byte channel)
+    {
+    if (channel == 0)
+        {
+        return (readRegister((uint8_t)READ_ONLY_REG::STATUS) & (uint16_t)MASK_STATUS_REG::DRDY0);
+        }
+    else if (channel == 1)
+        {
+        return (readRegister((uint8_t)READ_ONLY_REG::STATUS) & (uint16_t)MASK_STATUS_REG::DRDY1);
+        }
+    else if (channel == 2)
+        {
+        return (readRegister((uint8_t)READ_ONLY_REG::STATUS) & (uint16_t)MASK_STATUS_REG::DRDY2);
+        }
+    else if (channel == 3)
+        {
+        return (readRegister((uint8_t)READ_ONLY_REG::STATUS) & (uint16_t)MASK_STATUS_REG::DRDY3);
+        }
+    else
+        {
+        return -1;
+        }
+    }
+
+bool cADS131M04::setDrdyFormat(uint8_t drdyFormat)
+    {
+    bool result = false;
+    if (drdyFormat > 1)
+        {
+        return result;
+        }
+    else
+        {
+        result = this->writeRegisterMasked((uint8_t)GBL_CH_SETTINGS_REG::MODE, drdyFormat, (uint16_t)MASK_MODE_REG::FORMAT);
+        return result;
+        }
+    }
+
+bool cADS131M04::setDrdyStateWhenUnavailable(uint8_t drdyState)
+    {
+    bool result = false;
+    if (drdyState > 1)
+        {
+        return result;
+        }
+    else
+        {
+        result = this->writeRegisterMasked((uint8_t)GBL_CH_SETTINGS_REG::MODE, drdyState < 1, (uint16_t)MASK_MODE_REG::HiZ);
+        return result;
+        }
     }
 
 void cADS131M04::readChannels(int8_t *pChannel, int8_t nChannel, int32_t *pOutput)
@@ -111,12 +163,7 @@ bool cADS131M04::setGain(uint8_t channelGain0, uint8_t channelGain1, uint8_t cha
     uint16_t gainCommand;
     bool result;
 
-    gainCommand = channelGain3 << 12;
-    gainCommand = gainCommand | channelGain2;
-    gainCommand = gainCommand << 8;
-    gainCommand = gainCommand | channelGain1;
-    gainCommand = gainCommand << 4;
-    gainCommand = gainCommand | channelGain0;
+    gainCommand = (channelGain3 << 12) | (channelGain2 << 8) | (channelGain1 << 4) | (channelGain0);
 
     result = this->writeRegister((std::uint8_t)GBL_CH_SETTINGS_REG::GAIN, gainCommand);
     return result;
@@ -130,10 +177,44 @@ bool cADS131M04::globalChop(bool enable, uint8_t chopDelay)
     // Get current settings for current detect mode from the CFG register
     uint16_t currentSetting = (this->readRegister((std::uint8_t)GBL_CH_SETTINGS_REG::CONFIGURE) << 8) >>8;
 
-    uint16_t newData = (delayData << 12) + (enable << 8) + currentSetting;
+    uint16_t newData = (delayData << 9) + (enable << 8) + currentSetting;
 
     result = this->writeRegister((std::uint8_t)GBL_CH_SETTINGS_REG::CONFIGURE, newData);
     return result;
+    }
+
+bool cADS131M04::setGlobalChopDelay(uint16_t delay)
+    {
+    bool result;
+    result = writeRegisterMasked((uint8_t)GBL_CH_SETTINGS_REG::CONFIGURE, delay << 9, (uint16_t)MASK_CONFIGURE_REG::DELAY);
+    return result;
+    }
+
+bool cADS131M04::setOsr(uint16_t osr)
+    {
+    if (osr > 7)
+        {
+        return false;
+        }
+    else
+        {
+        this->writeRegisterMasked((uint8_t)GBL_CH_SETTINGS_REG::CLOCK, osr << 2 , (uint16_t)MASK_CLOCK_REG::OSR);
+        return true;
+        }
+    }
+
+bool cADS131M04::setPowerMode(uint8_t powerMode)
+    {
+    bool result = false;
+    if (powerMode > 3)
+        {
+        return result;
+        }
+    else
+        {
+        result = writeRegisterMasked((uint8_t)GBL_CH_SETTINGS_REG::CLOCK, powerMode, (uint16_t)MASK_CLOCK_REG::POWER);
+        return result;
+        }
     }
 
 uint16_t cADS131M04::readRegister(uint8_t registerAddr)
@@ -183,6 +264,19 @@ bool cADS131M04::writeRegister(uint8_t registerAddr, uint16_t data)
         {
         return false;
         }
+    }
+
+bool cADS131M04::writeRegisterMasked(uint8_t registerAddr, uint16_t data, uint16_t mask)
+    {
+    bool result;
+    uint16_t registerData = readRegister(registerAddr);
+
+    registerData = registerData & ~mask;
+
+    registerData = registerData | data;
+
+    result = this->writeRegister(registerAddr, registerData);
+    return result;
     }
 
 void cADS131M04::spiCommFrame(uint32_t * pOutput, uint16_t command)

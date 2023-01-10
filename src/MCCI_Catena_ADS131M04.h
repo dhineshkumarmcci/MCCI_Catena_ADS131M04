@@ -190,6 +190,35 @@ public:
         ID                                  = 0x2403,
         };
 
+    /// \brief  Mask Register STATUS
+    enum class  MASK_STATUS_REG : std::uint16_t
+        {
+        DRDY3                               = 0x0008,
+        DRDY2                               = 0x0004,
+        DRDY1                               = 0x0002,
+        DRDY0                               = 0x0001,
+        };
+
+    /// \brief  Mask Register MODE
+    enum class  MASK_MODE_REG : std::uint16_t
+        {
+        HiZ                                 = 0x0002,
+        FORMAT                              = 0x0001,
+        };
+
+    /// \brief  Mask Register CONFIGURE
+    enum class  MASK_CONFIGURE_REG : std::uint16_t
+        {
+        DELAY                               = 0x1E00,
+        };
+
+    /// \brief  Mask Register CLOCK
+    enum class  MASK_CLOCK_REG : std::uint16_t
+        {
+        OSR                                 = 0x001C,
+        POWER                               = 0x0003,
+        };
+
     ///
     /// \brief Power up the ADS131M04 and start operation.
     ///
@@ -218,6 +247,36 @@ public:
     ///     \c true for success, \c false for failure.
     ///
     bool isDataReady();
+
+    ///
+    /// \brief Check if there is any new data present on given channel.
+    ///
+    /// \param [in] channel is the channel to be read.
+    ///
+    /// \return
+    ///     \c data read from the channel
+    ///
+    int8_t isDataReadySoft(byte channel);
+
+    ///
+    /// \brief set a drdy pin format
+    ///
+    /// \param [in] drdyFormat is drdy format
+    ///
+    /// \return
+    ///     \c true for success, \c false for failure.
+    ///
+    bool setDrdyFormat(uint8_t drdyFormat);
+
+    ///
+    /// \brief set drdy pin state when data is unavailable
+    ///
+    /// \param [in] drdyState is drdy state
+    ///
+    /// \return
+    ///     \c true for success, \c false for failure.
+    ///
+    bool setDrdyStateWhenUnavailable(uint8_t drdyState);
 
     ///
     /// \brief reads all channels raw data.
@@ -258,7 +317,7 @@ public:
     /// \return
     ///     \c true for success, \c false for failure.
     ///
-    bool setGain(uint8_t channelGain0 = 1, uint8_t channelGain1 = 1, uint8_t channelGain2 = 1, uint8_t channelGain3 = 1);
+    bool setGain(uint8_t channelGain0 = 0, uint8_t channelGain1 = 0, uint8_t channelGain2 = 0, uint8_t channelGain3 = 0);
 
     ///
     /// \brief enable and configure global-chop settings
@@ -270,6 +329,33 @@ public:
     ///     \c true for success, \c false for failure.
     ///
     bool globalChop(bool enable = false, uint8_t chopDelay = 4);
+
+    /// \brief set the global chop delay
+    ///
+    /// \param [in] delay desired delay
+    ///
+    /// \return
+    ///     \c true for success, \c false for failure.
+    ///
+    bool setGlobalChopDelay(uint16_t delay);
+
+    /// \brief set the OSR
+    ///
+    /// \param [in] osr desired OSR to be set
+    ///
+    /// \return
+    ///     \c true for success, \c false for failure.
+    ///
+    bool setOsr(uint16_t osr);
+
+    /// \brief set the Power Mode
+    ///
+    /// \param [in] powerMode desired power mode to be set
+    ///
+    /// \return
+    ///     \c true for success, \c false for failure.
+    ///
+    bool setPowerMode(uint8_t powerMode);
 
 protected:
     ///
@@ -294,12 +380,27 @@ protected:
     ///
     bool writeRegister(uint8_t registerAddr, uint16_t data);
 
+    ///
+    /// \brief Write the data at a specified bit to a given register.
+    ///
+    /// \param [in] registerAddr selects the register to write
+    /// \param [in] data is the value to be written.
+    /// \param [in] mask is a bit that needed to be modified.
+    ///
+    /// \return
+    ///     \c true for success, \c false for failure. The
+    ///     last error is set in case of error.
+    ///
+    bool writeRegisterMasked(uint8_t registerAddr, uint16_t data, uint16_t mask);
+
 private:
     int8_t m_chipSelectPin, m_drdy, m_syncPin;
     SPIClass* m_pSpi;
     bool m_Initialized;
-    float m_fsr = 1.2;
-    uint32_t m_bits = 8388607;
+    // float m_fsr = 1.2;
+    // uint32_t m_bits = 8388607;
+    float m_fsr = 2.4;
+    uint32_t m_bits = 16777215;
 
     ///
     /// \brief forms a SPI communication frame.
